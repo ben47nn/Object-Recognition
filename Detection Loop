@@ -1,0 +1,48 @@
+import numpy as np
+import cv2
+
+#initialize the HOG descriptor/person detector
+hog = cv2.HOGDescriptor()
+hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+
+cv2.startWindowThread()
+
+#open webcam video stream
+cap = cv2.VideoCapture(0)
+
+#output wil be written to outpu.avi
+out = cv2.VideoWriter(
+    'output.avi', cv2.VideoWriter_fourcc(*'MJPG'),
+    15.,
+    (640, 480)
+)
+
+while (True):
+    #capture frame-by-frame
+    ret, frame = cap.read()
+
+    #resizing for faster detection
+    frame = cv2.resize(frame, (640, 480))
+    #using a greyscale picture, also fpr faster detection
+    gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+
+    #detect the person/people in image
+    #returns the bounding boxes for the detected objects
+    boxes, weights = hog.detectMultiScale(frame, winStride=(8,8))
+    for(xA, yA, xB, yB) in boxes:
+        #display the detected boxes in the colour picture
+        cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
+        #write the output of the video
+        out.write(frame.astype('uint8'))
+        #displaying the resulting frame
+        cv2.imshow('frame', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+#when everything is done, release the capture
+cap.release()
+#release the ouput
+out.release()
+#close the window
+cv2.destroyAllWindows()
+cv2.waitKey(1)
